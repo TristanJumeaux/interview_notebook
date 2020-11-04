@@ -65,8 +65,8 @@ Resources:
           FromPort: '80'
           CidrIp: '0.0.0.0/0'
         - IpProtocol: tcp
-          ToPort: '9000'
-          FromPort: '9000'
+          ToPort: '443'
+          FromPort: '443'
           CidrIp: '0.0.0.0/0'
         - IpProtocol: tcp
           ToPort: '22'

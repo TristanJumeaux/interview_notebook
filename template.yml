@@ -1,0 +1,76 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Deploys a simple instance with UserData that I'm RICA.
+Parameters:
+
+  KeyName:
+    Description: Name of an existing EC2 KeyPair to enable SSH access to the instance
+    Type: AWS::EC2::KeyPair::KeyName
+    ConstraintDescription: must be the name of an existing EC2 KeyPair.
+
+  InstanceType:
+    Description: EC2 instance type
+    Type: String
+    Default: t2.micro
+    AllowedValues: 
+      - t2.micro
+      - t2.large
+      - t2.small
+    Description: Enter instance type of EC2. Default is t2.large.
+
+  AMI:
+    Description: AMI (Default is Amazon Linux x86)
+    Type: String
+    # Default: ami-f4cc1de2 # Ubuntu
+    Default: ami-0de12f76efe134f2f # Amazon Linux
+
+  Location:
+    Description: The IP address range.
+    Type: String
+    MinLength: '9'
+    MaxLength: '18'
+    Default: '0.0.0.0/0'
+    AllowedPattern: (\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})/(\d{1,2})
+    ConstraintDescription: must be a valid IP CIDR range of the form x.x.x.x/x.
+
+  useVPC:
+    Type: AWS::EC2::VPC::Id
+    Description: "VPC to deploy the cluster into."
+    Default: vpc-a129cec9
+
+  useSubnet:
+    Type: AWS::EC2::Subnet::Id
+    Description: "Subnet to deploy the cluster into. Must be in the selected VPC."
+    Default: subnet-6af8fa03
+
+Resources:
+  MyInstance:
+    Type: AWS::EC2::Instance
+    Properties:
+      InstanceType: !Ref 'InstanceType'
+      SecurityGroupIds:
+        - !Ref 'InstanceSecurityGroup'
+      KeyName: !Ref 'KeyName'
+      ImageId: !Ref 'AMI'
+      SubnetId: !Ref 'useSubnet'
+      Tags:
+        - Key: Name
+          Value: Ippon Interview's instance
+  InstanceSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Group for EC2 instance
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          ToPort: '80'
+          FromPort: '80'
+          CidrIp: '0.0.0.0/0'
+        - IpProtocol: tcp
+          ToPort: '9000'
+          FromPort: '9000'
+          CidrIp: '0.0.0.0/0'
+        - IpProtocol: tcp
+          ToPort: '22'
+          FromPort: '22'
+          CidrIp: !Ref 'Location'
+      VpcId: !Ref 'useVPC'
+    Type: AWS::EC2::SecurityGroup

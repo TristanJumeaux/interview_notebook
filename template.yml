@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: Deploys a simple instance with Jupyter Notebook listening on port 443.
+Description: Deploys a simple instance with Jupyter Notebook listening on port 8888.
 Parameters:
 
   KeyName:
@@ -55,6 +55,34 @@ Resources:
       Tags:
         - Key: Name
           Value: Ippon Interview's instance
+
+      UserData:
+        Fn::Base64: !Sub |
+
+              #!/bin/bash 
+
+              # Download Anaconda
+              wget https://repo.anaconda.com/archive/Anaconda3-2020.02-Linux-x86_64.sh
+
+              echo "DOWNLOAD SUCCESSFUL"
+
+              # Install Anaconda
+              bash Anaconda3-2020.02-Linux-x86_64.sh -b
+
+              echo "INSTALL SUCCESSFUL"
+
+              # Activate Anaconda
+              source anaconda3/bin/activate
+
+              echo "ANACONDA ACTIVATED"
+
+              # Allow access to Notebook for all IPs on port 8888.
+              jupyter notebook --NotebookApp.ip="*"
+
+              echo "JUPYTER IS UP!"
+
+
+
   InstanceSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
@@ -69,8 +97,13 @@ Resources:
           FromPort: '443'
           CidrIp: '0.0.0.0/0'
         - IpProtocol: tcp
+          ToPort: '8888'
+          FromPort: '8888'
+          CidrIp: '0.0.0.0/0'
+        - IpProtocol: tcp
           ToPort: '22'
           FromPort: '22'
           CidrIp: !Ref 'Location'
       VpcId: !Ref 'useVPC'
+
     Type: AWS::EC2::SecurityGroup

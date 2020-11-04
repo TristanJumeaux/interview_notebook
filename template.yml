@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: Deploys a simple instance with UserData that I'm RICA.
+Description: Deploys a simple instance with Jupyter Notebook listening on port 443.
 Parameters:
 
   KeyName:

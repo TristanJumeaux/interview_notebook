@@ -57,30 +57,63 @@ Resources:
           Value: Ippon Interview's instance
 
       UserData:
-        Fn::Base64: !Sub |
+        Fn::Base64: !Sub 
+            - |
 
               #!/bin/bash 
 
-              # Download Anaconda
-              wget https://repo.anaconda.com/archive/Anaconda3-2020.02-Linux-x86_64.sh
+              cd home/ec2-user
+
+              ##### Download Anaconda
+              wget https://repo.anaconda.com/archive/Anaconda3-2020.02-Linux-x86_64.sh 
 
               echo "DOWNLOAD SUCCESSFUL"
 
-              # Install Anaconda
-              bash Anaconda3-2020.02-Linux-x86_64.sh -b
+              ##### Install Anaconda
+              bash Anaconda3-2020.02-Linux-x86_64.sh -b -p /home/ec2-user/anaconda3
 
               echo "INSTALL SUCCESSFUL"
 
-              # Activate Anaconda
-              source anaconda3/bin/activate
 
-              echo "ANACONDA ACTIVATED"
+              ##### Add SystemD to launch Jupyter at the restart of the machine
 
-              # Allow access to Notebook for all IPs on port 8888.
-              jupyter notebook --NotebookApp.ip="*"
+              echo "[Unit]" > ${SYSTEMDJUPYTERFILE}
+              echo "Description= Script to launch Jupyter at start of the machine. " >> ${SYSTEMDJUPYTERFILE}
+              echo "" >> ${SYSTEMDJUPYTERFILE}
+              echo "Wants=network-online.target" >> ${SYSTEMDJUPYTERFILE} # Indique que le script a besoin de l'accès à Internet 
+              echo "After=network-online.target" >> ${SYSTEMDJUPYTERFILE} # pour son bon fonctionnement
+              echo "" >> ${SYSTEMDJUPYTERFILE}
+              
+              echo "[Service]" >> ${SYSTEMDJUPYTERFILE}
+              echo "User=ec2-user" >> ${SYSTEMDJUPYTERFILE}
+              echo "Group=ec2-user" >> ${SYSTEMDJUPYTERFILE}
+              echo "ExecStart=/home/ec2-user/autostart/jupyter.sh" >> ${SYSTEMDJUPYTERFILE}
+              echo "" >> ${SYSTEMDJUPYTERFILE}
+              
+              echo "[Install]" >> ${SYSTEMDJUPYTERFILE}
+              echo "WantedBy=default.target" >> ${SYSTEMDJUPYTERFILE}
 
-              echo "JUPYTER IS UP!"
+              ##### End SystemD and make it executable
+              chmod +x ${SYSTEMDJUPYTERFILE}
 
+              ##### Add Script to run Jupyter
+
+              mkdir -p /home/ec2-user/autostart/
+              echo "#!/bin/bash" > /home/ec2-user/autostart/jupyter.sh
+              echo "source /home/ec2-user/anaconda3/bin/activate" >> /home/ec2-user/autostart/jupyter.sh
+              echo "jupyter notebook --NotebookApp.ip='*' --NotebookApp.token='IPPONINTERVIEW'" >> /home/ec2-user/autostart/jupyter.sh
+
+              ##### Add permissions and make jupyter.sh executable
+              chmod +x /home/ec2-user/autostart/jupyter.sh
+              chown ec2-user:ec2-user -R /home/ec2-user/autostart/
+
+              # Enable SystemD
+              systemctl start jupyter
+              systemctl enable jupyter
+
+              echo "UserData Done !"
+              reboot
+            - SYSTEMDJUPYTERFILE : /etc/systemd/system/jupyter.service
 
 
   InstanceSecurityGroup:

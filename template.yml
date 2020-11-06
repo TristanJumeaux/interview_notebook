@@ -64,24 +64,24 @@ Resources:
 
               cd home/ec2-user
 
-              ##### Download Anaconda
+              ################################ Download Anaconda #########################
               wget https://repo.anaconda.com/archive/Anaconda3-2020.02-Linux-x86_64.sh 
 
               echo "DOWNLOAD SUCCESSFUL"
 
-              ##### Install Anaconda
+              ################################ Install Anaconda ##########################
               bash Anaconda3-2020.02-Linux-x86_64.sh -b -p /home/ec2-user/anaconda3
 
               echo "INSTALL SUCCESSFUL"
 
-
-              ##### Add SystemD to launch Jupyter at the restart of the machine
+              #################################### SystemD ###############################
+              # Add SystemD to launch Jupyter at the restart of the machine 
 
               echo "[Unit]" > ${SYSTEMDJUPYTERFILE}
               echo "Description= Script to launch Jupyter at start of the machine. " >> ${SYSTEMDJUPYTERFILE}
               echo "" >> ${SYSTEMDJUPYTERFILE}
-              echo "Wants=network-online.target" >> ${SYSTEMDJUPYTERFILE} # Indique que le script a besoin de l'accès à Internet 
-              echo "After=network-online.target" >> ${SYSTEMDJUPYTERFILE} # pour son bon fonctionnement
+              echo "Wants=network-online.target" >> ${SYSTEMDJUPYTERFILE} # Indique que le script a besoin d'une dépendance afin de fournir l'accès à Internet nécéssaire à son bon fonctionnement. 
+              echo "After=network-online.target" >> ${SYSTEMDJUPYTERFILE} # Indique que le script de dépendance doit être exécuté avant de lancer ce script
               echo "" >> ${SYSTEMDJUPYTERFILE}
               
               echo "[Service]" >> ${SYSTEMDJUPYTERFILE}
@@ -91,12 +91,13 @@ Resources:
               echo "" >> ${SYSTEMDJUPYTERFILE}
               
               echo "[Install]" >> ${SYSTEMDJUPYTERFILE}
-              echo "WantedBy=default.target" >> ${SYSTEMDJUPYTERFILE}
+              echo "WantedBy=default.target" >> ${SYSTEMDJUPYTERFILE} # Indique le runlevel de l'instance.
 
-              ##### End SystemD and make it executable
+              # End SystemD and make it executable
               chmod +x ${SYSTEMDJUPYTERFILE}
 
-              ##### Add Script to run Jupyter
+              ################################ Bash Script ###############################
+              # Add Script to run Jupyter
 
               mkdir -p /home/ec2-user/autostart/
               echo "#!/bin/bash" > /home/ec2-user/autostart/jupyter.sh
@@ -108,11 +109,11 @@ Resources:
               chown ec2-user:ec2-user -R /home/ec2-user/autostart/
 
               # Enable SystemD
-              systemctl start jupyter
-              systemctl enable jupyter
+              systemctl start jupyter # launch manually the jupyter.service
 
               echo "UserData Done !"
-              reboot
+              echo "Jupyter server is up."
+              
             - SYSTEMDJUPYTERFILE : /etc/systemd/system/jupyter.service
 
 
